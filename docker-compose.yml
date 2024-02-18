@@ -11,6 +11,15 @@ services:
     environment:
       - PHP_MEMORY_LIMIT=1024M
       - PHP_UPLOAD_LIMIT=1024G
+      - NEXTCLOUD_ADMIN_USER=admin
+      - NEXTCLOUD_ADMIN_PASSWORD=admin
+      - NEXTCLOUD_TRUSTED_DOMAINS=nextcloud # Append your domain here
+      - TRUSTED_PROXIES=172.17.0.0/16 192.168.178.0/24
+      - POSTGRES_HOST=database
+      - POSTGRES_DB=nextcloud
+      - POSTGRES_USER=nextcloud
+      - POSTGRES_PASSWORD=nextcloud
+      - REDIS_HOST=cache
     healthcheck:
       test: curl -sSf http://localhost/status.php | jq -e '(.installed==true) and (.maintenance==false) and (.needsDbUpgrade==false)'
       start_period: 30s
@@ -22,10 +31,10 @@ services:
       - "80:80"
     restart: unless-stopped
     volumes:
-      - /srv/nextcloud/app:/var/www/html
-      - /srv/nextcloud/config:/var/www/html/config
-      - /srv/nextcloud/custom_apps:/var/www/html/custom_apps
-      - /srv/nextcloud/data:/var/www/html/data
+      - app:/var/www/html
+      - config:/var/www/html/config
+      - custom_apps:/var/www/html/custom_apps
+      - data:/var/www/html/data
 
   cron:
     depends_on:
@@ -78,7 +87,7 @@ services:
       timeout: 5s
     restart: unless-stopped
     volumes:
-      - /srv/nextcloud/cache:/bitnami/redis
+      - cache:/bitnami/redis
 
   database:
     build: ./postgresql
@@ -93,7 +102,15 @@ services:
       timeout: 5s
     restart: unless-stopped
     volumes:
-      - /srv/nextcloud/database:/bitnami/postgresql
+      - database:/bitnami/postgresql
     tmpfs:
       - /docker-entrypoint-preinitdb.d
       - /docker-entrypoint-initdb.d
+
+volumes:
+  app:
+  cache:
+  config:
+  custom_apps:
+  data:
+  database:
